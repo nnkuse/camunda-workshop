@@ -3,6 +3,8 @@ package com.workshop.camunda.service;
 import com.workshop.camunda.model.request.CamundaProcessRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.RuntimeService;
+import org.camunda.bpm.engine.runtime.ProcessInstance;
+import org.camunda.bpm.engine.runtime.ProcessInstanceQuery;
 import org.camunda.bpm.engine.variable.Variables;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -17,15 +19,27 @@ public class CamundaService {
     @Autowired
     private RuntimeService runtimeService;
 
-    public void startCamundaProcess(CamundaProcessRequest request, HttpHeaders httpHeaders){
+    public void startCamundaProcess(CamundaProcessRequest request, HttpHeaders headers){
         runtimeService.startProcessInstanceByKey(
-                PROCESS_KEY_CAMUNDA_PROCESS,
+                "CAMUNDA_PROCESS",
                 request.getId(),
-                Variables.putValue(TASK_VARIABLE_ID, request.getId()).
-                        putValue(TASK_VARIABLE_NAME, request.getName()).
-                        putValue(TASK_VARIABLE_FIRST_NAME, request.getFirstName()).
-                        putValue(TASK_VARIABLE_LAST_NAME, request.getLastName()).
-                        putValue(TASK_VARIABLE_MESSAGE, request.getMessage())
+                Variables.putValue("varHttpHeader", headers).
+                        putValue("varCorrelationId", headers.getFirst("correlationid")).
+                        putValue("varId", request.getId()).
+                        putValue("varMessage", request.getMessage()).
+                        putValue("varFlag", request.getFlag())
         );
+    }
+
+    public void resumeAsyncTask(String request, HttpHeaders headers) {
+        ProcessInstanceQuery query = runtimeService.createProcessInstanceQuery();
+        query.variableValueEquals("varCorrelationId", headers.getFirst("correlationid"));
+        ProcessInstance processInstance = query.active().singleResult();
+        if (processInstance == null) {
+            log.warn("Cannot find active processInstance for CORRELATION_ID {} and UserID {}", headers.getFirst("correlationid"));
+        } else {
+            System.out.println(request);
+            runtimeService.createMessageCorrelation(headers.getFirst("camunda-msg-name")).processInstanceId(processInstance.getProcessInstanceId()).correlate();
+        }
     }
 }

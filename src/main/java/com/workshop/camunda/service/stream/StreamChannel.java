@@ -9,16 +9,16 @@ import org.springframework.stereotype.Component;
 public interface StreamChannel {
 
     String CAMUNDA_PROCESS_INPUT = "CamundaProcessInput";
-    String CREATE_FILE_INPUT = "CreateFileInput";
-    String CREATE_FILE_OUTPUT = "CreateFileOutput";
+    String INCOMING_MESSAGE_INPUT = "MessageInput";
+    String OUTGOING_MESSAGE_OUTPUT = "MessageOutput";
 
     @Input(StreamChannel.CAMUNDA_PROCESS_INPUT)
     SubscribableChannel streamingCamundaProcessInput();
 
-    @Input(StreamChannel.CREATE_FILE_INPUT)
-    SubscribableChannel streamingCreateFileInput();
+    @Input(StreamChannel.INCOMING_MESSAGE_INPUT)
+    SubscribableChannel streamingIncomingMessageInput();
 
-    @Output(StreamChannel.CREATE_FILE_OUTPUT)
-    SubscribableChannel streamingCreateFileOutput();
+    @Output(StreamChannel.OUTGOING_MESSAGE_OUTPUT)
+    SubscribableChannel streamingOutgoingMessageOutput();
 
 }

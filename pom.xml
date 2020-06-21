@@ -28,6 +28,11 @@
 			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 
+		<dependency>
+			<groupId>th.co.scb.fasteasy.common</groupId>
+			<artifactId>stream-interceptor</artifactId>
+		</dependency>
+
 		<!--Kafka-->
 		<dependency>
 			<groupId>org.springframework.cloud</groupId>

@@ -8,13 +8,10 @@ import lombok.experimental.Accessors;
 import java.io.Serializable;
 
 @Data
-@Accessors(chain = true)
 @NoArgsConstructor
 @AllArgsConstructor
 public class CamundaProcessRequest implements Serializable {
     private String id;
-    private String name;
-    private String firstName;
-    private String lastName;
     private String message;
+    private Boolean flag;
 }
