@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1lgoetc" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.3">
+  <bpmn:process id="CAMUNDA_PROCESS_WORK_SHOP" name="Camunda Process Work Shop" isExecutable="true" camunda:versionTag="1">
+    <bpmn:extensionElements>
+      <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
+      <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+    </bpmn:extensionElements>
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>SequenceFlow_1jjtwl5</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="SequenceFlow_1jjtwl5" sourceRef="StartEvent_1" targetRef="CHECK_FILE_EXISTS" />
+    <bpmn:sequenceFlow id="SequenceFlow_02igvum" sourceRef="CHECK_FILE_EXISTS" targetRef="IF_GW_IS_FILE_EXISTS" />
+    <bpmn:serviceTask id="CHECK_FILE_EXISTS" name="Check File Exists" camunda:asyncBefore="true" camunda:delegateExpression="#{checkFileExistsDelegate}">
+      <bpmn:extensionElements>
+        <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
+        <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+        <camunda:failedJobRetryTimeCycle>R3/PT1M</camunda:failedJobRetryTimeCycle>
+      </bpmn:extensionElements>
+      <bpmn:incoming>SequenceFlow_1jjtwl5</bpmn:incoming>
+      <bpmn:outgoing>SequenceFlow_02igvum</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:serviceTask id="WRITE_TEXT" name="Write Text" camunda:asyncBefore="true" camunda:delegateExpression="#{processThreeDelegate}">
+      <bpmn:extensionElements>
+        <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
+        <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_01ifayh</bpmn:incoming>
+      <bpmn:outgoing>Flow_1cc276w</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:exclusiveGateway id="IF_GW_IS_FILE_EXISTS" name="Is file exists?">
+      <bpmn:incoming>SequenceFlow_02igvum</bpmn:incoming>
+      <bpmn:outgoing>Flow_1msuqvx</bpmn:outgoing>
+      <bpmn:outgoing>Flow_03a9ljl</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1msuqvx" name="Yes (isFileExists = true)" sourceRef="IF_GW_IS_FILE_EXISTS" targetRef="Gateway_03h0i0d">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${varIsFileExists== true}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:subProcess id="CREATE_FILE_SUB_PROCESS" name="Create File Sub-Process">
+      <bpmn:incoming>Flow_03a9ljl</bpmn:incoming>
+      <bpmn:outgoing>Flow_1iljnud</bpmn:outgoing>
+      <bpmn:startEvent id="Event_1tfv6ho">
+        <bpmn:outgoing>Flow_0lsmmtg</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:sendTask id="CREATE_FILE_SEND_MESSAGE" name="Create Text file" camunda:asyncBefore="true" camunda:delegateExpression="#{createTextFileDelegate}">
+        <bpmn:extensionElements>
+          <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
+          <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_0lsmmtg</bpmn:incoming>
+        <bpmn:outgoing>Flow_1czchld</bpmn:outgoing>
+      </bpmn:sendTask>
+      <bpmn:sequenceFlow id="Flow_0lsmmtg" sourceRef="Event_1tfv6ho" targetRef="CREATE_FILE_SEND_MESSAGE" />
+      <bpmn:sequenceFlow id="Flow_1czchld" sourceRef="CREATE_FILE_SEND_MESSAGE" targetRef="CREATE_FILE_RECEVIVE_MESSAGE" />
+      <bpmn:endEvent id="Event_05y5ywb">
+        <bpmn:incoming>Flow_07johsn</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_07johsn" sourceRef="CREATE_FILE_RECEVIVE_MESSAGE" targetRef="Event_05y5ywb" />
+      <bpmn:receiveTask id="CREATE_FILE_RECEVIVE_MESSAGE" name="Create Text File Receive Task" camunda:asyncBefore="true" messageRef="Message_0ivwej3">
+        <bpmn:extensionElements>
+          <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
+          <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+        </bpmn:extensionElements>
+        <bpmn:incoming>Flow_1czchld</bpmn:incoming>
+        <bpmn:outgoing>Flow_07johsn</bpmn:outgoing>
+      </bpmn:receiveTask>
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_03a9ljl" name="No (isFileExists = false)" sourceRef="IF_GW_IS_FILE_EXISTS" targetRef="CREATE_FILE_SUB_PROCESS">
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${varIsFileExists== false}</bpmn:conditionExpression>
+    </bpmn:sequenceFlow>
+    <bpmn:inclusiveGateway id="Gateway_03h0i0d">
+      <bpmn:incoming>Flow_1iljnud</bpmn:incoming>
+      <bpmn:incoming>Flow_1msuqvx</bpmn:incoming>
+      <bpmn:outgoing>Flow_01ifayh</bpmn:outgoing>
+    </bpmn:inclusiveGateway>
+    <bpmn:sequenceFlow id="Flow_1iljnud" sourceRef="CREATE_FILE_SUB_PROCESS" targetRef="Gateway_03h0i0d" />
+    <bpmn:endEvent id="Event_11ims3e">
+      <bpmn:incoming>Flow_1cc276w</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1cc276w" sourceRef="WRITE_TEXT" targetRef="Event_11ims3e" />
+    <bpmn:sequenceFlow id="Flow_01ifayh" sourceRef="Gateway_03h0i0d" targetRef="WRITE_TEXT" />
+  </bpmn:process>
+  <bpmn:message id="Message_0ivwej3" name="CREATE_TEXT_FILE_MESSAGE" />
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="CAMUNDA_PROCESS_WORK_SHOP">
+      <bpmndi:BPMNEdge id="Flow_01ifayh_di" bpmnElement="Flow_01ifayh">
+        <di:waypoint x="765" y="400" />
+        <di:waypoint x="850" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1cc276w_di" bpmnElement="Flow_1cc276w">
+        <di:waypoint x="950" y="400" />
+        <di:waypoint x="1042" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iljnud_di" bpmnElement="Flow_1iljnud">
+        <di:waypoint x="740" y="280" />
+        <di:waypoint x="740" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_03a9ljl_di" bpmnElement="Flow_03a9ljl">
+        <di:waypoint x="495" y="180" />
+        <di:waypoint x="640" y="180" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="526" y="146" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1msuqvx_di" bpmnElement="Flow_1msuqvx">
+        <di:waypoint x="470" y="205" />
+        <di:waypoint x="470" y="400" />
+        <di:waypoint x="710" y="400" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="480" y="302" width="90" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_02igvum_di" bpmnElement="SequenceFlow_02igvum">
+        <di:waypoint x="370" y="180" />
+        <di:waypoint x="445" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="SequenceFlow_1jjtwl5_di" bpmnElement="SequenceFlow_1jjtwl5">
+        <di:waypoint x="188" y="180" />
+        <di:waypoint x="270" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="152" y="162" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="ServiceTask_023fg99_di" bpmnElement="CHECK_FILE_EXISTS">
+        <dc:Bounds x="270" y="140" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_0foeg1t_di" bpmnElement="WRITE_TEXT">
+        <dc:Bounds x="850" y="360" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_04la10f_di" bpmnElement="IF_GW_IS_FILE_EXISTS" isMarkerVisible="true">
+        <dc:Bounds x="445" y="155" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="441" y="125" width="63" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1hwv7kx_di" bpmnElement="CREATE_FILE_SUB_PROCESS" isExpanded="true">
+        <dc:Bounds x="640" y="80" width="520" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_07johsn_di" bpmnElement="Flow_07johsn">
+        <di:waypoint x="1040" y="180" />
+        <di:waypoint x="1092" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1czchld_di" bpmnElement="Flow_1czchld">
+        <di:waypoint x="870" y="180" />
+        <di:waypoint x="940" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0lsmmtg_di" bpmnElement="Flow_0lsmmtg">
+        <di:waypoint x="716" y="180" />
+        <di:waypoint x="770" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_1tfv6ho_di" bpmnElement="Event_1tfv6ho">
+        <dc:Bounds x="680" y="162" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_1xvaar5_di" bpmnElement="CREATE_FILE_SEND_MESSAGE">
+        <dc:Bounds x="770" y="140" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_05y5ywb_di" bpmnElement="Event_05y5ywb">
+        <dc:Bounds x="1092" y="162" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Activity_039e18e_di" bpmnElement="CREATE_FILE_RECEVIVE_MESSAGE">
+        <dc:Bounds x="940" y="140" width="100" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_0yh7gva_di" bpmnElement="Gateway_03h0i0d">
+        <dc:Bounds x="715" y="375" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_11ims3e_di" bpmnElement="Event_11ims3e">
+        <dc:Bounds x="1042" y="382" width="36" height="36" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

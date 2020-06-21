@@ -13,8 +13,11 @@ public class CommonConstants {
     public static final String FLAG_Y = "Y";
     public static final String HEADER_CUSTOMER_ID = "customerId";
 
+    public static final String INCOMING_STREAM_FROM_MESSAGE = "Incoming stream message from {}. Message -> \nHeader: {}, \nBody: \n{}";
+    public static final String OUTCOMING_STREAM_TO_MESSAGE = "Message sent to {}. - {} Message -> \nHeader: {}, \nBody: \n{}";
+
     // Process key
-    public static final String PROCESS_KEY_CAMUNDA_PROCESS = "";
+    public static final String PROCESS_KEY_CAMUNDA_PROCESS = "CAMUNDA_PROCESS";
 
     // Variable key
     public static final String TASK_VARIABLE_ID = "varId";
