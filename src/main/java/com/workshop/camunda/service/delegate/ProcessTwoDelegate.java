@@ -16,6 +16,6 @@ public class ProcessTwoDelegate implements JavaDelegate {
         String id = (String) delegateExecution.getVariable("varId");
         String message = (String) delegateExecution.getVariable("varMessage");
         Boolean flag = (Boolean) delegateExecution.getVariable("varFlag");
-        System.out.println("Process Two print message: " + message);
+        log.info("Process Two print message: {}, correlationid: {}", message, httpHeaders.getFirst("correlationid"));
     }
 }

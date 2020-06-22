@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import static com.workshop.camunda.config.CommonConstants.*;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -19,9 +19,9 @@ public class CamundaService {
     @Autowired
     private RuntimeService runtimeService;
 
-    public void startCamundaProcess(CamundaProcessRequest request, HttpHeaders headers){
+    public void startCamundaProcess(CamundaProcessRequest request, HttpHeaders headers) {
         runtimeService.startProcessInstanceByKey(
-                "CAMUNDA_PROCESS",
+                "CAMUNDA_PROCESS_WORK_SHOP",
                 request.getId(),
                 Variables.putValue("varHttpHeader", headers).
                         putValue("varCorrelationId", headers.getFirst("correlationid")).
@@ -32,14 +32,32 @@ public class CamundaService {
     }
 
     public void resumeAsyncTask(String request, HttpHeaders headers) {
-        ProcessInstanceQuery query = runtimeService.createProcessInstanceQuery();
-        query.variableValueEquals("varCorrelationId", headers.getFirst("correlationid"));
-        ProcessInstance processInstance = query.active().singleResult();
-        if (processInstance == null) {
-            log.warn("Cannot find active processInstance for CORRELATION_ID {} and UserID {}", headers.getFirst("correlationid"));
-        } else {
-            System.out.println(request);
-            runtimeService.createMessageCorrelation(headers.getFirst("camunda-msg-name")).processInstanceId(processInstance.getProcessInstanceId()).correlate();
+        try {
+            ProcessInstanceQuery query = runtimeService.createProcessInstanceQuery();
+            query.variableValueEquals("varCorrelationId", headers.getFirst("correlationid"));
+            ProcessInstance processInstance = query.active().singleResult();
+            if (processInstance == null) {
+                log.warn("Cannot find active processInstance for CORRELATION_ID {} and UserID {}", headers.getFirst("correlationid"));
+            } else {
+                log.info("Resume Task pring message: {}, correlationid: {}", request, headers.getFirst("correlationid"));
+                runtimeService.createMessageCorrelation(headers.getFirst("camunda-msg-name")).processInstanceId(processInstance.getProcessInstanceId()).correlate();
+            }
+        } catch (Exception ex) {
+            ProcessInstanceQuery query = runtimeService.createProcessInstanceQuery();
+            // Query process instance by correlationId
+            query.variableValueEquals("varCorrelationId", headers.getFirst("correlationid"));
+
+            // Add condition to check whether compile process is still in progress or not
+            // (Process still inside sub-process)
+            query.activityIdIn("SUB_PROCESS", "SEND_MESSAGE_TASK", "RECEVIVE_MESSAGE");
+
+            List<ProcessInstance> processInstanceList = query.list();
+
+            // If found any record, assume that compile process hasn't done yet rethrow exception to let MS reprocess message again
+            if (!processInstanceList.isEmpty()) {
+                log.error("Exception: {}", ex.toString());
+                throw ex;
+            }
         }
     }
 }

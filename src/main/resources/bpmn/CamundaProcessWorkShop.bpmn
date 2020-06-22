@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" id="Definitions_1lgoetc" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="4.0.0">
   <bpmn:process id="CAMUNDA_PROCESS_WORK_SHOP" name="Camunda Process Work Shop" isExecutable="true" camunda:versionTag="1">
-    <bpmn:extensionElements>
-      <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
-      <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
-    </bpmn:extensionElements>
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>SequenceFlow_1jjtwl5</bpmn:outgoing>
     </bpmn:startEvent>
@@ -13,7 +9,7 @@
     <bpmn:serviceTask id="PROCESS_ONE" name="Process One" camunda:asyncBefore="true" camunda:delegateExpression="#{processOneDelegate}">
       <bpmn:extensionElements>
         <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
-        <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+        <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationCleanUpListener" event="end" />
         <camunda:failedJobRetryTimeCycle>R3/PT1M</camunda:failedJobRetryTimeCycle>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1jjtwl5</bpmn:incoming>
@@ -22,7 +18,7 @@
     <bpmn:serviceTask id="PROCESS_TWO" name="Process Two" camunda:asyncBefore="true" camunda:delegateExpression="#{processTwoDelegate}">
       <bpmn:extensionElements>
         <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
-        <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+        <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationCleanUpListener" event="end" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_01ifayh</bpmn:incoming>
       <bpmn:outgoing>Flow_1cc276w</bpmn:outgoing>
@@ -33,9 +29,13 @@
       <bpmn:outgoing>Flow_03a9ljl</bpmn:outgoing>
     </bpmn:exclusiveGateway>
     <bpmn:sequenceFlow id="Flow_1msuqvx" name="Yes (isFlag = true)" sourceRef="IF_GW_IS_TRUE" targetRef="Gateway_03h0i0d">
-      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${varFlag= true}</bpmn:conditionExpression>
+      <bpmn:conditionExpression xsi:type="bpmn:tFormalExpression">${varFlag == true}</bpmn:conditionExpression>
     </bpmn:sequenceFlow>
-    <bpmn:subProcess id="SUB_PROCESS" name="Sub-Process">
+    <bpmn:subProcess id="SUB_PROCESS" name="Sub-Process" camunda:asyncBefore="true">
+      <bpmn:extensionElements>
+        <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
+        <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationCleanUpListener" event="end" />
+      </bpmn:extensionElements>
       <bpmn:incoming>Flow_03a9ljl</bpmn:incoming>
       <bpmn:outgoing>Flow_1iljnud</bpmn:outgoing>
       <bpmn:startEvent id="Event_1tfv6ho">
@@ -44,7 +44,7 @@
       <bpmn:sendTask id="SEND_MESSAGE_TASK" name="Send Message Task" camunda:asyncBefore="true" camunda:delegateExpression="#{sendMessageTaskDelegate}">
         <bpmn:extensionElements>
           <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
-          <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
+          <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationCleanUpListener" event="end" />
         </bpmn:extensionElements>
         <bpmn:incoming>Flow_0lsmmtg</bpmn:incoming>
         <bpmn:outgoing>Flow_1czchld</bpmn:outgoing>
@@ -56,10 +56,6 @@
       </bpmn:endEvent>
       <bpmn:sequenceFlow id="Flow_07johsn" sourceRef="RECEVIVE_MESSAGE" targetRef="Event_05y5ywb" />
       <bpmn:receiveTask id="RECEVIVE_MESSAGE" name="Receive Message Task" camunda:asyncBefore="true" messageRef="Message_0ivwej3">
-        <bpmn:extensionElements>
-          <camunda:executionListener class="com.workshop.camunda.service.delegate.listener.CorrelationInjectionListener" event="start" />
-          <camunda:executionListener class="com.workshop.camunda.delegate.listener.CorrelationCleanUpListener" event="end" />
-        </bpmn:extensionElements>
         <bpmn:incoming>Flow_1czchld</bpmn:incoming>
         <bpmn:outgoing>Flow_07johsn</bpmn:outgoing>
       </bpmn:receiveTask>
@@ -79,7 +75,7 @@
     <bpmn:sequenceFlow id="Flow_1cc276w" sourceRef="PROCESS_TWO" targetRef="Event_11ims3e" />
     <bpmn:sequenceFlow id="Flow_01ifayh" sourceRef="Gateway_03h0i0d" targetRef="PROCESS_TWO" />
   </bpmn:process>
-  <bpmn:message id="Message_0ivwej3" name="MESSAGE_TASK" />
+  <bpmn:message id="Message_0ivwej3" name="RECEVIVE_MESSAGE" />
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="CAMUNDA_PROCESS_WORK_SHOP">
       <bpmndi:BPMNEdge id="Flow_01ifayh_di" bpmnElement="Flow_01ifayh">

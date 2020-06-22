@@ -19,7 +19,10 @@ public class CamundaProcessController {
 
     @PostMapping("/message")
     public ResponseEntity postMessage(@RequestBody CamundaProcessRequest request, @RequestHeader HttpHeaders httpHeaders) {
-        camundaService.startCamundaProcess(request, httpHeaders);
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("correlationid", httpHeaders.getFirst("correlationid"));
+        headers.set("correlationid", httpHeaders.getFirst("correlationid"));
+        camundaService.startCamundaProcess(request, headers);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 }

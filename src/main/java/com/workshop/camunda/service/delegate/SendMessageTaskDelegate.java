@@ -20,8 +20,7 @@ public class SendMessageTaskDelegate implements JavaDelegate {
         String id = (String) delegateExecution.getVariable("varId");
         String message = (String) delegateExecution.getVariable("varMessage");
         Boolean flag = (Boolean) delegateExecution.getVariable("varFlag");
-        System.out.println("Process One print message: " + message);
-
+        log.info("Sub-process print message: {}, correlationid: {}", message, httpHeaders.getFirst("correlationid"));
         streamService.sendMessageTask(message, httpHeaders);
     }
 }
